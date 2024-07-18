@@ -21,7 +21,7 @@ import getData from "./esalabscraper.js";
 
 const app = express();
 const corsOptions = {
-  origin: 'http://localhost:3006',
+  origin: 'https://ahkwebsite.vercel.app',
   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
 };
 
@@ -48,8 +48,8 @@ app.use(session({
       checkPeriod: 86400000 // prune expired entries every 24h
   }),
   cookie: {
-    maxAge: 1000 * 60 * 60 * 24, // 1 day
-    secure: true, // Use true in production
+    maxAge: 1000 * 60 * 60 * 24,
+    secure:true, // 1 day
     sameSite: 'none',
   }
 }));
