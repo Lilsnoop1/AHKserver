@@ -49,8 +49,8 @@ app.use(session({
   }),
   cookie: {
     maxAge: 1000 * 60 * 60 * 24, // 1 day
-    secure: false, // Set to true if using HTTPS
-    sameSite: 'lax', // Set to 'lax' to allow cookies with cross-origin requests
+    secure: true, // Use true in production
+    sameSite: 'none',
   }
 }));
 
