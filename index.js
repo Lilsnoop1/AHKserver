@@ -11,13 +11,13 @@ import passport from "passport";
 import { Strategy } from "passport-local";
 import session from "express-session";
 import methodoverride from "method-override";
-import { Employee,User } from "./model.js";
+import { Employee,User } from "../model.js";
 import memorystore from 'memorystore';
 import mongoose from "mongoose";
 import yazl from "yazl"
 import cors from "cors"
 import "dotenv/config"
-import getData from "./esalabscraper.js";
+import getData from "../esalabscraper.js";
 
 const app = express();
 const corsOptions = {
