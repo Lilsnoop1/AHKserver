@@ -11,14 +11,16 @@ import passport from "passport";
 import { Strategy } from "passport-local";
 import session from "express-session";
 import methodoverride from "method-override";
+import connectMongoDBSession from 'connect-mongodb-session';
 import { Employee,User } from "./model.js";
-import memorystore from 'memorystore';
 import mongoose from "mongoose";
 import yazl from "yazl"
 import cors from "cors"
 import "dotenv/config"
 import getData from "./esalabscraper.js";
 
+
+const MongoDBStore = connectMongoDBSession(session);
 const app = express();
 const corsOptions = {
   origin: ['https://ahkwebsite.vercel.app','http://localhost:3006'],
@@ -27,7 +29,6 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 const saltingRounds = 10;
-const MemoryStore = memorystore(session);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -38,24 +39,45 @@ app.use(methodoverride('_method'));
 var conn = mongoose.createConnection("mongodb+srv://ammar:ammar@cluster0.vuzjvhx.mongodb.net/promanagerDB");
 mongoose.connect("mongodb+srv://ammar:ammar@cluster0.vuzjvhx.mongodb.net/promanagerDB");
 
+const store = new MongoDBStore({
+  uri: 'mongodb+srv://ammar:ammar@cluster0.vuzjvhx.mongodb.net/promanagerDB',
+  collection: 'mySessions'
+}, function(error) {
+  if (error) {
+    console.log(error);
+  }
+});
+
+// Catch errors
+store.on('error', function(error) {
+  console.log(error);
+});
+
 
 
 app.use(session({
   secret: "TopSecretWord",
   resave: false,
   saveUninitialized: false,
-  store: new MemoryStore({
-    checkPeriod: 86400000 // prune expired entries every 24h
-  }),
+  store: store,
   cookie: {
     maxAge: 1000 * 60 * 60 * 24, // 1 day
     secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (requires HTTPS)
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Use SameSite=None in production for cross-site requests
-  }
+  },
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use((req, res, next) => {
+  req.session.cookie.secure = true;
+  res.header('Access-Control-Allow-Origin', "http://localhost:3006");
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  next();
+});
 
 
 var gfs;
@@ -234,14 +256,6 @@ app.get("/getSlip",(req,res,next)=>{
   
 
 })
-
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', "http://localhost:3006");
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  next();
-});
 
 
 app.post("/register", async (req, res) => {
