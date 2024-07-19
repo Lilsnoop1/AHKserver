@@ -45,11 +45,12 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   store: new MemoryStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
+    checkPeriod: 86400000 // prune expired entries every 24h
   }),
   cookie: {
     maxAge: 1000 * 60 * 60 * 24, // 1 day
-    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (requires HTTPS)
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Use SameSite=None in production for cross-site requests
   }
 }));
 
