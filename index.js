@@ -64,8 +64,6 @@ app.use(session({
   store: store,
   name:"AHKWebsite",
   cookie: {
-    domain:"https://ahkwebsite.vercel.app/",
-    path:'/',
     httpOnly:false,
     maxAge: 1000 * 60 * 60 * 24, // 1 day
     secure: true, // Use secure cookies in production (requires HTTPS)
