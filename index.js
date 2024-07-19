@@ -64,7 +64,7 @@ app.use(session({
   store: store,
   name:"AHKWebsite",
   cookie: {
-    domain:".domain.com",
+    domain:"https://ahkwebsite.vercel.app/",
     path:'/',
     httpOnly:false,
     maxAge: 1000 * 60 * 60 * 24, // 1 day
@@ -77,11 +77,10 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use((req, res, next) => {
-  req.session.cookie.secure = true;
-  res.header('Access-Control-Allow-Origin', "https://ahkwebsite.vercel.app");
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header("Access-Control-Allow-Origin", "https://ahkwebsite.vercel.app"); // update to match the domain you will make the request from
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Credentials", true); // allows cookie to be sent
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, HEAD, DELETE"); // you must specify the methods used with credentials. "*" will not work. 
   next();
 });
 
