@@ -72,7 +72,7 @@ app.use(passport.session());
 
 app.use((req, res, next) => {
   req.session.cookie.secure = true;
-  res.header('Access-Control-Allow-Origin', "http://localhost:3006");
+  res.header('Access-Control-Allow-Origin', "https://ahkwebsite.vercel.app");
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
