@@ -56,20 +56,20 @@ store.on('error', function(error) {
 
 app.set("trust proxy", 1);
 
-
 app.use(session({
   secret: "TopSecretWord",
   resave: false,
-  saveUninitialized: false,
+  proxy:true,
+  saveUninitialized: true,
   store: store,
   name:"AHKWebsite",
   cookie: {
     domain:"https://ahkwebsite.vercel.app",
     path:'/',
-    httpOnly:true,
+    httpOnly:false,
     maxAge: 1000 * 60 * 60 * 24, // 1 day
-    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (requires HTTPS)
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Use SameSite=None in production for cross-site requests
+    secure: true, // Use secure cookies in production (requires HTTPS)
+    sameSite: 'none' // Use SameSite=None in production for cross-site requests
   },
 }));
 
