@@ -54,7 +54,7 @@ store.on('error', function(error) {
 });
 
 
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 
 app.use(session({
   secret: "TopSecretWord",
@@ -64,7 +64,7 @@ app.use(session({
   store: store,
   name:"AHKWebsite",
   cookie: {
-    domain:"https://ahkwebsite.vercel.app",
+    domain:".domain.com",
     path:'/',
     httpOnly:false,
     maxAge: 1000 * 60 * 60 * 24, // 1 day
