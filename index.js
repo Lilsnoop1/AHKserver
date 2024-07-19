@@ -61,6 +61,8 @@ app.use(session({
   saveUninitialized: false,
   store: store,
   cookie: {
+    domain:"https://ahkwebsite.vercel.app",
+    path:'/',
     maxAge: 1000 * 60 * 60 * 24, // 1 day
     secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (requires HTTPS)
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' // Use SameSite=None in production for cross-site requests
