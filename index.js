@@ -300,7 +300,7 @@ app.post('/logUser',async (req,res)=>{
     var uniqueMrNumber = crypto.randomBytes(20);
     const {email,name,age,cnic,gender,dob,mobileNumber,searchResult,priceofsearch,discount,received} = req.body;
     try{
-      const createUser = await User.create({email:email,name:name,age:age,cnic:cnic,gender:gender,dob,mobileNumber:mobileNumber,mrnumber:uniqueMrNumber.toString('hex')});
+      const createUser = await User.create({email:email,name:name,age:age,cnic:cnic,gender:gender,dob:dob,mobileNumber:mobileNumber,mrnumber:uniqueMrNumber.toString('hex'),received:received,searchResult:searchResult,priceofsearch:priceofsearch,discount:discount});
       if(createUser!=null){
         res.json({"Success":"User Created","isAuth":true,"mrnumber":uniqueMrNumber});
       }
