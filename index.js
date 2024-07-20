@@ -298,9 +298,9 @@ app.post("/register", async (req, res) => {
 app.post('/logUser',async (req,res)=>{
   if(req.isAuthenticated()){
     var uniqueMrNumber = crypto.randomBytes(20);
-    const {email,name,mobileNumber} = req.body;
+    const {email,name,age,cnic,gender,dob,mobileNumber,searchResult,priceofsearch,discount,received} = req.body;
     try{
-      const createUser = await User.create({email:email,name:name,mobileNumber:mobileNumber,mrnumber:uniqueMrNumber.toString('hex')});
+      const createUser = await User.create({email:email,name:name,age:age,cnic:cnic,gender:gender,dob,mobileNumber:mobileNumber,mrnumber:uniqueMrNumber.toString('hex')});
       if(createUser!=null){
         res.json({"Success":"User Created","isAuth":true,"mrnumber":uniqueMrNumber});
       }

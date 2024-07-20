@@ -23,7 +23,37 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true
     },
+    age:{
+        type:Number,
+        required:true
+    },
+    cnic:{
+        type:Number,
+        required:true
+    },
+    gender:{
+        type:String,
+        required:true
+    },
+    dob:{
+        type:String,
+        required:true
+    },
     mobileNumber:{
+        type:Number,
+        required:true
+    },
+    searchResult:[{
+        searchResult:String,
+    }],
+    priceofsearch:[{
+        priceofsearch:Number,
+    }],
+    discount:{
+        type:Number,
+        required:true
+    },
+    received:{
         type:Number,
         required:true
     },

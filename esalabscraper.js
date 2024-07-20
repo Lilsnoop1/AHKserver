@@ -32,34 +32,34 @@ export default async function getData (source){
     }
     await autoScroll(page);
     const grabTitle = await page.evaluate(()=>{
-        var objectJson=[];
         var titlearr = [];
         var radiologyarr = [];
         var imgurlarr = [];
         var pricearr = [];
         var counter = 0;
-        const title = document.querySelectorAll(".grid-link__title");
-        const imgURL = document.querySelectorAll(".featured-image");
-        const price = document.querySelectorAll("#ProductPrice");
-        const radiology = document.querySelectorAll(".menu-lv-3");
+        const imgUrl = document.querySelectorAll(".support_thumb");
+        const title = document.querySelectorAll(".desc");
+        // const price = document.querySelectorAll("#ProductPrice");
+        // const radiology = document.querySelectorAll(".menu-lv-3");
         title.forEach((heading)=>{
             titlearr.push(heading.innerText);
             counter++;
         })
-        imgURL.forEach((url)=>{
+        imgUrl.forEach((url)=>{
             // const source = url.firstElementChild.src;
             // const altersource = source.slice(0,source.length-20);
-            imgurlarr.push(url.src);
+            imgurlarr.push(url.children[0].src);
         })
-        price.forEach((pr)=>{
-            pricearr.push(pr.innerText);
-        })
-        radiology.forEach((rad)=>{
-            radiologyarr.push(rad.children[0].textContent);
-        })
-        for(let x = 0;x<counter;x++){
-            objectJson.push({"imgurl":imgurlarr[x],"Title":titlearr[x],"Price":pricearr[x],"id":x});
-        }
+        // price.forEach((pr)=>{
+        //     pricearr.push(pr.innerText);
+        // })
+        // radiology.forEach((rad)=>{
+        //     radiologyarr.push(rad.children[0].textContent);
+        // })
+        // for(let x = 0;x<counter;x++){
+        //     objectJson.push({"Text":titlearr[x],counter:x,"imgurl":imgurlarr[x]});
+        // }
+        var objectJson={"Text":titlearr[0],"imgurl":imgurlarr[0]};
         return objectJson; 
     });
     return grabTitle;
