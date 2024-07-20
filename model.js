@@ -43,11 +43,11 @@ const userSchema = new mongoose.Schema({
         type:Number,
         required:true
     },
-    searchResult:[{
-        searchResult:String,
+    tests:[{
+        name:String,
     }],
-    priceofsearch:[{
-        priceofsearch:Number,
+    testPrices:[{
+        price:Number,
     }],
     discount:{
         type:Number,

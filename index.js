@@ -298,16 +298,20 @@ app.post("/register", async (req, res) => {
 app.post('/logUser',async (req,res)=>{
   if(req.isAuthenticated()){
     var uniqueMrNumber = crypto.randomBytes(20);
-    const {email,name,age,cnic,gender,dob,mobileNumber,searchResult,priceofsearch,discount,received} = req.body;
+    const {email,name,age,cnic,gender,dob,mobileNumber,tests,testPrices,discount,received} = req.body;
     try{
-      const createUser = await User.create({email:email,name:name,age:age,cnic:cnic,gender:gender,dob:dob,mobileNumber:mobileNumber,mrnumber:uniqueMrNumber.toString('hex'),received:received,searchResult:searchResult,priceofsearch:priceofsearch,discount:discount});
+      const createUser = await User.create({email:email,name:name,age:age,cnic:cnic,gender:gender,dob:dob,mobileNumber:mobileNumber,mrnumber:uniqueMrNumber.toString('hex'),received:received,tests:tests,testPrices:testPrices,discount:discount});
       if(createUser!=null){
+        console.log(createUser);
         res.json({"Success":"User Created","isAuth":true,"mrnumber":uniqueMrNumber});
       }
     }catch(err){
-      res.json({"err":"User not created"});
+      console.log(err);
+      res.json({"err":err.message});
     }
-  }else{
+  }
+  else{
+    console.log(false);
     res.json({"isAuth":false});
   }
 })
