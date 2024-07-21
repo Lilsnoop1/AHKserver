@@ -75,7 +75,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://ahkwebsite.vercel.app"); // update to match the domain you will make the request from
+  res.header("Access-Control-Allow-Origin", "https://ahkwebsite.vercel.app/"); // update to match the domain you will make the request from
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header("Access-Control-Allow-Credentials", true); // allows cookie to be sent
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, HEAD, DELETE"); // you must specify the methods used with credentials. "*" will not work. 
@@ -146,6 +146,7 @@ app.get("/esalabData",async (req,res)=>{
 
 app.post("/file",async (req,res)=>{
   const {mrnumber} = req.body;
+  console.log(mrnumber);
     try{
       let specFile = await gfs.files.find({metadata:mrnumber}).toArray();
       if (specFile && specFile.length > 0) {
@@ -186,6 +187,49 @@ app.post("/file",async (req,res)=>{
     res.json({"err":"An Error Occurred"});
   }
 })
+
+
+app.post("/downloadsingle/:index", async (req, res) => {
+  const { mrnumber } = req.body;
+  try {
+      const specFile = await gfs.files.find({ metadata: mrnumber }).toArray();
+      if (specFile.length > 0) {
+          const bucket = new mongoose.mongo.GridFSBucket(conn, { bucketName: 'uploads' });
+          const fileToDownload = specFile[req.params.index];
+          
+          if (fileToDownload) {
+              const downit = bucket.openDownloadStream(fileToDownload._id);
+              res.setHeader('Content-Type', fileToDownload.contentType); // Set content type
+              downit.pipe(res);
+          } else {
+              res.status(404).json({ "err": "File not found" });
+          }
+      } else {
+          res.status(404).json({ "err": "File metadata not found" });
+      }
+  } catch (error) {
+      console.error('Error:', error);
+      res.status(500).json({ "err": "An Error Occurred" });
+  }
+});
+
+app.post("/getfileCount",async(req,res)=>{
+  const {mrnumber} = req.body;
+  try{
+    const files = await gfs.files.find({metadata:mrnumber}).toArray();
+    if(files){
+      console.log(files.length);
+      res.json({"Success":"Found Files","FileCount":files.length});
+    }else{
+      res.json({"Error":"No Files Found"});
+    }
+  }catch(err){
+    res.json({"Error":err.message});
+  }
+})
+
+
+
 
 app.get("/getsession", (req, res) => {
   try {
@@ -295,26 +339,59 @@ app.post("/register", async (req, res) => {
   }
 });
 
-app.post('/logUser',async (req,res)=>{
-  if(req.isAuthenticated()){
-    var uniqueMrNumber = crypto.randomBytes(20);
-    const {email,name,age,cnic,gender,dob,mobileNumber,tests,testPrices,discount,received} = req.body;
-    try{
-      const createUser = await User.create({email:email,name:name,age:age,cnic:cnic,gender:gender,dob:dob,mobileNumber:mobileNumber,mrnumber:uniqueMrNumber.toString('hex'),received:received,tests:tests,testPrices:testPrices,discount:discount});
-      if(createUser!=null){
-        console.log(createUser);
-        res.json({"Success":"User Created","isAuth":true,"mrnumber":uniqueMrNumber});
+function generateRandomInt32() {
+  return new Promise((resolve, reject) => {
+    crypto.randomBytes(4, (err, buf) => {
+      if (err) {
+        return reject(err);
       }
-    }catch(err){
+      const hex = buf.toString('hex');
+      const myInt32 = parseInt(hex, 16);
+      resolve(myInt32);
+    });
+  });
+}
+async function handleRequest(req, res) {
+  if(req.isAuthenticated()){
+    try {
+      // Generate random 32-bit integer
+      const val = await generateRandomInt32();
+      console.log(val);  // Now you can use val here
+      
+      // Extract data from request body
+      const { email, name, age, cnic, gender, dob, mobileNumber, tests, testPrices, discount, received } = req.body;
+  
+      // Create user with generated mrnumber
+      const createUser = await User.create({
+        email: email,
+        name: name,
+        age: age,
+        cnic: cnic,
+        gender: gender,
+        dob: dob,
+        mobileNumber: mobileNumber,
+        mrnumber: val,
+        received: received,
+        tests: tests,
+        testPrices: testPrices,
+        discount: discount
+      });
+  
+      if (createUser) {
+        console.log(createUser);
+        res.json({ "Success": "User Created", "isAuth": true, "mrnumber": val });
+      }
+    } catch (err) {
       console.log(err);
-      res.json({"err":err.message});
+      res.json({ "err": err.message });
     }
+  }else{
+    res.json({"isAuth":false})
   }
-  else{
-    console.log(false);
-    res.json({"isAuth":false});
-  }
-})
+  
+}
+
+app.post('/logUser',handleRequest);
 
 
 app.post('/login', (req, res, next) => {
