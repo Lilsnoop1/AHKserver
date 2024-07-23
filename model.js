@@ -29,19 +29,17 @@ const userSchema = new mongoose.Schema({
     },
     cnic:{
         type:Number,
-        required:true
     },
     gender:{
         type:String,
-        required:true
     },
     dob:{
         type:String,
-        required:true
     },
     mobileNumber:{
         type:Number,
-        required:true
+        required:true,
+        unique:true
     },
     tests:[{
         name:String,
@@ -51,15 +49,15 @@ const userSchema = new mongoose.Schema({
     }],
     discount:{
         type:Number,
-        required:true
     },
     received:{
         type:Number,
-        required:true
     },
     mrnumber:{
         type:String,
-        required:true
+    },
+    infotest:{
+        type:String
     }
 })
 

@@ -352,44 +352,93 @@ function generateRandomInt32() {
   });
 }
 async function handleRequest(req, res) {
-  if(req.isAuthenticated()){
+  if (req.isAuthenticated()) {
     try {
       // Generate random 32-bit integer
       const val = await generateRandomInt32();
       console.log(val);  // Now you can use val here
-      
+
       // Extract data from request body
-      const { email, name, age, cnic, gender, dob, mobileNumber, tests, testPrices, discount, received } = req.body;
-  
-      // Create user with generated mrnumber
-      const createUser = await User.create({
-        email: email,
-        name: name,
-        age: age,
-        cnic: cnic,
-        gender: gender,
-        dob: dob,
-        mobileNumber: mobileNumber,
-        mrnumber: val,
-        received: received,
-        tests: tests,
-        testPrices: testPrices,
-        discount: discount
-      });
-  
-      if (createUser) {
-        console.log(createUser);
-        res.json({ "Success": "User Created", "isAuth": true, "mrnumber": val });
+      const { email, name, age, cnic, gender, dob, mobileNumber, tests, testPrices, discount, received, infotest } = req.body;
+
+      // Validate required fields
+      if (!name || !email || !age || !mobileNumber) {
+        return res.status(400).json({ "error": "Missing required fields: name, email, age, or mobileNumber" });
+      }
+
+      // Check if infotest is provided and not empty
+      if (infotest) {
+        // Update existing user with infotest
+        const updatedUser = await User.findOneAndUpdate(
+          { mobileNumber: mobileNumber },
+          { $set: { infotest: infotest } },
+          { new: true }  // Return the updated document
+        );
+        
+        if (updatedUser) {
+          console.log(updatedUser);
+          return res.json({ "Success": "User Updated", "isAuth": true, "mrnumber": val });
+        } else {
+          try {
+            const createUser = await User.create({
+              email: email,
+              name: name,
+              age: age,
+              cnic: cnic,
+              gender: gender,
+              dob: dob,
+              mobileNumber: mobileNumber,
+              mrnumber: val,
+              received: received,
+              tests: tests,
+              testPrices: testPrices,
+              discount: discount,
+              infotest:infotest
+            });
+            console.log(createUser);
+            return res.json({ "Success": "User Created", "isAuth": true, "mrnumber": val });
+          } catch (err) {
+            return res.status(500).json({ "err": err.message });
+          }
+        }
+      } else {
+        // Create new user if infotest is not provided or empty
+        const existingUser = await User.findOne({ mobileNumber: mobileNumber });
+
+        if (!existingUser) {
+          try {
+            const createUser = await User.create({
+              email: email,
+              name: name,
+              age: age,
+              cnic: cnic,
+              gender: gender,
+              dob: dob,
+              mobileNumber: mobileNumber,
+              mrnumber: val,
+              received: received,
+              tests: tests,
+              testPrices: testPrices,
+              discount: discount
+            });
+            console.log(createUser);
+            return res.json({ "Success": "User Created", "isAuth": true, "mrnumber": val });
+          } catch (err) {
+            return res.status(500).json({ "err": err.message });
+          }
+        } else {
+          return res.status(400).json({ "Failure": "User Already exists" });
+        }
       }
     } catch (err) {
-      console.log(err);
-      res.json({ "err": err.message });
+      console.log(err.message);
+      return res.status(500).json({ "err": err.message });
     }
-  }else{
-    res.json({"isAuth":false})
+  } else {
+    return res.status(401).json({ "isAuth": false });
   }
-  
 }
+
 
 app.post('/logUser',handleRequest);
 
