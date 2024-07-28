@@ -12,7 +12,7 @@ import { Strategy } from "passport-local";
 import session from "express-session";
 import methodoverride from "method-override";
 import connectMongoDBSession from 'connect-mongodb-session';
-import { Employee,User } from "./model.js";
+import { Contacts, Employee,User } from "./model.js";
 import mongoose from "mongoose";
 import yazl from "yazl"
 import cors from "cors"
@@ -23,7 +23,7 @@ import getData from "./esalabscraper.js";
 const MongoDBStore = connectMongoDBSession(session);
 const app = express();
 const corsOptions = {
-  origin: ['https://ahkwebsite.vercel.app','http://localhost:3006'],
+  origin: ['https://ahkwebsite.vercel.app','http://localhost:3001'],
   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
 };
 
@@ -114,7 +114,7 @@ var storage = new GridFsStorage({
 
 
 app.post("/upload",upload.array("reports",10),(req,res)=>{
-  res.json({"isAuth":true});
+  res.json({"isAuth":true,"success":"Authorized and Sent"});
 })
 
 
@@ -202,7 +202,7 @@ app.post("/downloadsingle/:index", async (req, res) => {
               res.setHeader('Content-Type', fileToDownload.contentType); // Set content type
               downit.pipe(res);
           } else {
-              res.status(404).json({ "err": "File not found" });
+              res.status(404).json({ "err": "File not found"});
           }
       } else {
           res.status(404).json({ "err": "File metadata not found" });
@@ -217,11 +217,11 @@ app.post("/getfileCount",async(req,res)=>{
   const {mrnumber} = req.body;
   try{
     const files = await gfs.files.find({metadata:mrnumber}).toArray();
-    if(files){
+    if(files.length>0){
       console.log(files.length);
-      res.json({"Success":"Found Files","FileCount":files.length});
+      res.json({"success":"Found Files","FileCount":files.length});
     }else{
-      res.json({"Error":"No Files Found"});
+      res.json({"Error":"No Files Found","failure":"No Files Found"});
     }
   }catch(err){
     res.json({"Error":err.message});
@@ -234,8 +234,8 @@ app.post("/getfileCount",async(req,res)=>{
 app.get("/getsession", (req, res) => {
   try {
     if (req.session.passport && req.session.passport.user) {
-      res.json({ "isAuth": true, "user": req.session.passport.user });
-      console.log(req.session.passport.user);
+      res.json({ "isAuth": true, "user": req.session.passport.user,"role":req.user.role});
+      console.log(req.user.role);
     } else {
       res.json({ "isAuth": false });
       console.log("null");
@@ -257,10 +257,10 @@ app.post("/getSinglemrnumber",async (req,res)=>{
       if(found){
         res.json(found);
       }else{
-        res.json({"err":"User Not Found"});
+        res.json({"err":"User Not Found","failure":"User Not Found"});
       }
     }catch(err){
-      res.json({"err":err.message});
+      res.json({"err":err.message,"failure":"An Error Ocurred"});
     }
   }else{
     res.json({"isAuth":false});
@@ -306,36 +306,49 @@ app.get("/getSlip",(req,res,next)=>{
 
 
 app.post("/register", async (req, res) => {
-  if(req.isAuthenticated()){const email = req.body.username;
+  if(req.isAuthenticated()){
+    const email = req.body.email;
   const password = req.body.password;
+  const role = req.body.role;
+  const name = req.body.name;
 
   try{
     const check = await Employee.findOne({email:email});
     if(check != null){
-      res.send("User Already Exists, Try logging in.");
+      res.json({"failure":"User Already Exists, Try logging in."});
     }else{
       try{
         bcrypt.hash(password,saltingRounds,async (err,hash)=>{
           if(err){
-            res.json({"err":"Error Hashing the password"});
+            res.json({"err":"Error Hashing the password","failure":"Server Error"});
           }
-          const newUser = await Employee.create({email:email,password:hash,role:"Employee"});
-          req.login(newUser,(err)=>{
-            if(err){
-              res.json({"err":"Error Logging in, Please Retry","isAuth":false});
+          try{
+            const newUser = await Employee.create({email:email,password:hash,role:role,name:name});
+            if(newUser){
+              res.json({"success":"Registered Successfully"})
             }else{
-              res.json({"isAuth":true});
+              res.json({"failure":"Error Occurred While Registering"});
             }
-          });
+          }catch(err){
+            res.json({"failure":"Error Occurred While Registering"});
+          }
+          // req.login(newUser,(err)=>{
+          //   if(err){
+          //     res.json({"failure":"Error Logging in, Please Retry","isAuth":false});
+          //   }else{
+          //     res.json({"isAuth":true,"success":"Successful"});
+          //   }
+          // });
         })
       }catch(error){
-        res.json({"err":"Error Creating User"});
+        res.json({"err":"Error Creating User","failure":"Error Occurred While Registering"});
       }
     }
   }catch(error){
-    res.json({"err":"Error Creating User"});
-  }}else{
-    res.json({"isAuth":false});
+    res.json({"err":"Error Creating User","failure":"Error Occurred While Registering"});
+  }
+  }else{
+    res.json({"isAuth":false,"failure":"Error Occurred While Registering"});
   }
 });
 
@@ -352,7 +365,6 @@ function generateRandomInt32() {
   });
 }
 async function handleRequest(req, res) {
-  if (req.isAuthenticated()) {
     try {
       // Generate random 32-bit integer
       const val = await generateRandomInt32();
@@ -363,21 +375,21 @@ async function handleRequest(req, res) {
 
       // Validate required fields
       if (!name || !email || !age || !mobileNumber) {
-        return res.status(400).json({ "error": "Missing required fields: name, email, age, or mobileNumber" });
+        return res.status(200).json({ "error": "Missing required fields: name, email, age, or mobileNumber" });
       }
 
       // Check if infotest is provided and not empty
       if (infotest) {
         // Update existing user with infotest
         const updatedUser = await User.findOneAndUpdate(
-          { mobileNumber: mobileNumber },
+          { mobileNumber: mobileNumber,email:email },
           { $set: { infotest: infotest } },
           { new: true }  // Return the updated document
         );
         
         if (updatedUser) {
           console.log(updatedUser);
-          return res.json({ "Success": "User Updated", "isAuth": true, "mrnumber": val });
+          return res.json({ "success": "User Updated", "isAuth": true, "mrnumber": val });
         } else {
           try {
             const createUser = await User.create({
@@ -396,61 +408,98 @@ async function handleRequest(req, res) {
               infotest:infotest
             });
             console.log(createUser);
-            return res.json({ "Success": "User Created", "isAuth": true, "mrnumber": val });
+            if(createUser){
+              return res.json({ "success": "User Created", "isAuth": true, "mrnumber": val });
+            }else{
+              return res.json({"failure": "User Not Created", "isAuth": true, "mrnumber": val });
+            }
           } catch (err) {
             return res.status(500).json({ "err": err.message });
           }
         }
       } else {
-        // Create new user if infotest is not provided or empty
-        const existingUser = await User.findOne({ mobileNumber: mobileNumber });
+        if(req.isAuthenticated()){
+            // Create new user if infotest is not provided or empty
+          const existingUser = await User.findOne({ mobileNumber: mobileNumber,email:email });
 
-        if (!existingUser) {
-          try {
-            const createUser = await User.create({
-              email: email,
-              name: name,
-              age: age,
-              cnic: cnic,
-              gender: gender,
-              dob: dob,
-              mobileNumber: mobileNumber,
-              mrnumber: val,
-              received: received,
-              tests: tests,
-              testPrices: testPrices,
-              discount: discount
-            });
-            console.log(createUser);
-            return res.json({ "Success": "User Created", "isAuth": true, "mrnumber": val });
-          } catch (err) {
-            return res.status(500).json({ "err": err.message });
-          }
-        } else {
-          return res.status(400).json({ "Failure": "User Already exists" });
+          if (!existingUser) {
+
+            try {
+              const createUser = await User.create({
+                email: email,
+                name: name,
+                age: age,
+                cnic: cnic,
+                gender: gender,
+                dob: dob,
+                mobileNumber: mobileNumber,
+                mrnumber: val,
+                received: received,
+                tests: tests,
+                testPrices: testPrices,
+                discount: discount
+              });
+              console.log(createUser);
+              if(createUser){
+                return res.json({ "Success": "User Created", "isAuth": true, "mrnumber": val });
+              }else{
+                return res.json({ "failure": "User Not Created", "isAuth": true, "mrnumber": val });
+              }
+            } catch (err) {
+              return res.status(500).json({ "err": err.message,"failure":"An Error Ocurred"});
+            }
+          } else {
+            const newupdatedUser = await User.findOneAndUpdate(
+              { mobileNumber: mobileNumber,email:email },
+              { $set: {cnic:cnic,gender:gender,dob:dob,received:received,tests:tests,testPrices:testPrices,discount:discount} },
+              { new: true }  // Return the updated document
+            );
+            if(newupdatedUser){
+              console.log("woooo");
+              return res.json({ "success": "User Updated", "isAuth": true});
+            }else{
+              return res.json({ "failure": "User Not Updated", "isAuth": true});
+            }
+        }
+        }else {
+          return res.json({"isAuth": false,"failure":"Not Authenticated" });
         }
       }
     } catch (err) {
       console.log(err.message);
-      return res.status(500).json({ "err": err.message });
+      return res.status(500).json({ "err": err.message,"failure":"An Error Ocurred"});
     }
-  } else {
-    return res.status(401).json({ "isAuth": false });
-  }
 }
 
 
 app.post('/logUser',handleRequest);
 
 
+app.post("/contactinfo",async (req,res)=>{
+  const {email,fname,lname,message} = req.body;
+  try{
+    const postContact = await Contacts.create({email:email,fname:fname,lname:lname,message:message});
+    console.log(postContact);
+    if(postContact){
+      res.status(200).json({"success":"Contact Form Submitted"});
+    }else{
+      res.status(200).json({"failure":"Contact Form Not Submitted"});
+    }
+  }catch(err){
+    res.status(400).json({"err":"An error occurred"});
+  }
+})
+
+
 app.post('/login', (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
-    if (err) return next(err);
-    if (!user) return res.status(401).json({ "isAuth": false });
+    if (err) return res.json({"isAuth":false,"failure":"Couldn't Log In"});
+    if (!user) return res.status(401).json({ "isAuth": false ,"failure":"Couldn't Log In"});
     
     req.logIn(user, (err) => {
-      if (err) return next(err);
-      return res.json({"isAuth":true});
+      if (err) return res.json({"isAuth":false,"failure":"Couldn't Log In"})
+      console.log(user);
+      return res.json({"isAuth":true,"role":user.role,"success":"Logged In, Redirecting"});
     });
   })(req, res, next);
 });
