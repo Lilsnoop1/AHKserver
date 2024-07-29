@@ -504,6 +504,13 @@ app.post('/login', (req, res, next) => {
   })(req, res, next);
 });
 
+
+app.get('/getuser',(req,res)=>{
+  if(req.user){
+    res.json(req.user);
+  }
+})
+
 app.post("/logout",(req,res)=>{
   req.logout((err)=>{
     if(err){
