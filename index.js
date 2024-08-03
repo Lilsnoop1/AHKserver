@@ -441,7 +441,7 @@ async function handleRequest(req, res) {
               });
               console.log(createUser);
               if(createUser){
-                return res.json({ "Success": "User Created", "isAuth": true, "mrnumber": val });
+                return res.json({ "success": "User Created", "isAuth": true, "mrnumber": val });
               }else{
                 return res.json({ "failure": "User Not Created", "isAuth": true, "mrnumber": val });
               }
