@@ -78,9 +78,9 @@ const userSchema = new mongoose.Schema({
     mrnumber:{
         type:String,
     },
-    infotest:[{
-        tests:String,
-    }]
+    infotest:{
+        type:String
+    }
 })
 
 
